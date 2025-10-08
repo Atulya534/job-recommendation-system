@@ -1,0 +1,48 @@
+import pandas as pd
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+import re
+
+DATA_PATH = r'E:\.vscode\synthetic_resumes.csv'  
+df_resumes = pd.read_csv(DATA_PATH)
+
+def preprocess_text(text):
+    text = str(text).lower()  
+    text = re.sub(r'[^a-z0-9\s]', ' ', text)  
+    text = re.sub(r'\s+', ' ', text).strip()  
+    return text
+
+def build_corpus(df):
+    columns_to_use = []
+    for col in ['name', 'skills', 'projects', 'experience']:
+        if col in df.columns:
+            columns_to_use.append(col)
+    if not columns_to_use:
+        raise ValueError("No valid columns found in CSV for building corpus")
+    
+    combined = df[columns_to_use].fillna('').agg(' '.join, axis=1)
+    return combined.map(preprocess_text)
+
+resume_corpus = build_corpus(df_resumes)
+
+
+vectorizer = TfidfVectorizer(stop_words='english', max_features=5000)
+resume_tfidf = vectorizer.fit_transform(resume_corpus)
+
+print("Enter job description details:")
+job_title = input("Title: ")
+job_description = input("Description: ")
+job_skills = input("Skills (comma separated): ")
+
+job_text = f"{job_title} {job_description} {job_skills}"
+job_text_clean = preprocess_text(job_text)
+
+
+job_vector = vectorizer.transform([job_text_clean])
+
+similarity_scores = cosine_similarity(job_vector, resume_tfidf)  
+best_match_idx = similarity_scores.argmax() 
+
+
+print("\n=== Best Matching Resume ===")
+print(df_resumes.iloc[best_match_idx])
