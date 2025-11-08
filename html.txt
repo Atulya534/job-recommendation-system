@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Job Recommendation System</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container" id="login-box">
+    <h2>Login</h2>
+    <input type="text" id="username" placeholder="Username">
+    <input type="password" id="password" placeholder="Password">
+    <button onclick="login()">Login</button>
+  </div>
+
+  <div class="container" id="main-box" style="display:none;">
+    <h1>Job Recommendation System</h1>
+    <h3>Enter Job Details</h3>
+
+    <input type="text" id="title" placeholder="Job Title">
+    <input type="text" id="skills" placeholder="Skills (comma separated)">
+    <button onclick="findMatches()">Find Matches</button>
+
+    <div id="results"></div>
+  </div>
+
+  <script>
+    function login() {
+      const user = document.getElementById("username").value;
+      const pass = document.getElementById("password").value;
+
+      if (user === "atulya" && pass === "1234") {
+        document.getElementById("login-box").style.display = "none";
+        document.getElementById("main-box").style.display = "block";
+      } else {
+        alert("Invalid username or password!");
+      }
+    }
+
+    async function findMatches() {
+      const title = document.getElementById("title").value;
+      const skills = document.getElementById("skills").value;
+      const resultsDiv = document.getElementById("results");
+
+      if (!title || !skills) {
+        alert("Please enter job title and skills!");
+        return;
+      }
+
+      const jobData = { title, skills };
+
+      const response = await fetch("http://127.0.0.1:5000/recommend", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(jobData)
+      });
+
+      const data = await response.json();
+      resultsDiv.innerHTML = "<h4>Top 3 Matching Resumes:</h4>";
+
+      data.forEach((resume, index) => {
+        resultsDiv.innerHTML += `
+          <div class="resume-box">
+            <b>Match #${index + 1} (Similarity: ${resume.similarity})</b><br>
+            Name: ${resume.name || "N/A"}<br>
+            Skills: ${resume.skills || "N/A"}<br>
+            Projects: ${resume.projects || "N/A"}<br>
+            Experience: ${resume.experience || "N/A"}<br><br>
+          </div>
+        `;
+      });
+    }
+  </script>
+</body>
+</html>

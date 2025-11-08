@@ -1,0 +1,33 @@
+async function findMatches() {
+  const title = document.getElementById("title").value;
+  const skills = document.getElementById("skills").value;
+  const resultsDiv = document.getElementById("results");
+
+  if (!title || !skills) {
+    alert("Please enter job title and skills!");
+    return;
+  }
+
+  const jobData = { title, skills };
+
+  const response = await fetch("http://127.0.0.1:5000/recommend", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(jobData)
+  });
+
+  const data = await response.json();
+  resultsDiv.innerHTML = "<h4>Top 3 Matching Resumes:</h4>";
+
+  data.forEach((resume, index) => {
+    resultsDiv.innerHTML += `
+      <div class="resume-box">
+        <b>Match #${index + 1} (Similarity: ${resume.similarity})</b><br>
+        Name: ${resume.name || "N/A"}<br>
+        Skills: ${resume.skills || "N/A"}<br>
+        Projects: ${resume.projects || "N/A"}<br>
+        Experience: ${resume.experience || "N/A"}<br><br>
+      </div>
+    `;
+  });
+}
